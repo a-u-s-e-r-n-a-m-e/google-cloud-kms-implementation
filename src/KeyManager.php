@@ -1,35 +1,35 @@
 <?php
 
-namespace MyCloudKmsProject;
-
 use Google\ApiCore\ApiException;
 use Google\Cloud\Kms\V1\CryptoKey;
 use Google\Cloud\Kms\V1\CryptoKey\CryptoKeyPurpose;
 use Google\Cloud\Kms\V1\KeyManagementServiceClient as Kms;
 use Google\Cloud\Kms\V1\KeyRing;
 
-class KeyManager {
-    private $kms;
-    private $projectId;    // Plaintext project ID
-    private $locationId;   // Plaintext location ID
-    private $locationRef;  // Encoded location reference
-    private $keyRingId;    // Plaintext keyring ID
-    private $keyRingRef;   // Encoded keyring reference
-    private $cryptoKeyId;  // Plaintext key ID
-    private $criptoKeyRef; // Encoded key reference
+class KeyManager{
 
-    public function __construct($projectId, $locationId, $keyRingId, $cryptoKeyId){
-        $this->kms            = new Kms();
-        $this->projectId      = $projectId;
-        $this->locationId     = $locationId;
-        $this->locationRef    = $this->kms::locationName($this->projectId, $this->locationId);
-        $this->keyRingId      = $keyRingId;
-        $this->keyRingRef     = $this->kms::keyRingName($this->projectId, $this->locationId, $this->keyRingId);
-        $this->cryptoKeyId    = $cryptoKeyId;
-        $this->criptoKeyRef   = $this->kms::cryptoKeyName($this->projectId, $this->locationId, $this->keyRingId, $this->cryptoKeyId);
+    private $kms;
+    private $projectId;
+    private $locationId;
+    private $locationRef;
+    private $keyRingId;
+    private $keyRingRef;
+    private $cryptoKeyId;
+    private $cryptoKeyRef;
+
+    public function __construct($projectId, $locationId, $keyRingId, $cryptoKeyId)
+    {
+        $this->kms = new Kms();
+        $this->projectId = $projectId;
+        $this->locationId = $locationId;
+        $this->locationRef = $this->kms::locationName($this->projectId, $this->locationId);
+        $this->keyRingId = $keyRingId;
+        $this->keyRingRef = $this->kms::keyRingName($this->projectId, $this->locationId, $this->keyRingId);
+        $this->cryptoKeyId = $cryptoKeyId;
+        $this->cryptoKeyRef = $this->kms::cryptoKeyName($this->projectId, $this->locationId, $this->keyRingId, $this->cryptoKeyId);
 
         try {
-            $keyRing = $this->kms->getKeyRing($this->keyRingRef);
+            $this->kms->getKeyRing($this->keyRingRef);
         } catch (ApiException $e) {
             if ($e->getStatus() === 'NOT_FOUND') {
                 $keyRing = new KeyRing();
@@ -39,12 +39,12 @@ class KeyManager {
         }
 
         try {
-            $cryptoKey = $this->kms->getCryptoKey($this->criptoKeyRef);
+            $this->kms->getCryptoKey($this->cryptoKeyRef);
         } catch (ApiException $e) {
             if ($e->getStatus() === 'NOT_FOUND') {
                 $cryptoKey = new CryptoKey();
                 $cryptoKey->setPurpose(CryptoKeyPurpose::ENCRYPT_DECRYPT);
-                $cryptoKey = $this->kms->createCryptoKey($this->keyRingRef, $this->cryptoKeyId, $cryptoKey);
+                $this->kms->createCryptoKey($this->keyRingRef, $this->cryptoKeyId, $cryptoKey);
             }
         }
     }
@@ -64,7 +64,7 @@ class KeyManager {
         $secret = base64_encode($key);
 
         $response = $this->kms->encrypt(
-            $this->criptoKeyRef,
+            $this->cryptoKeyRef,
             $secret
         );
 
@@ -73,7 +73,7 @@ class KeyManager {
 
     public function decryptKey($secret){
         $response = $this->kms->decrypt(
-            $this->criptoKeyRef,
+            $this->cryptoKeyRef,
             $secret
         );
 
@@ -88,5 +88,4 @@ class KeyManager {
 
         return sodium_crypto_secretbox_open($ciphertext, $nonce, $key);
     }
-
 }
