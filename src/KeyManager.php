@@ -1,5 +1,7 @@
 <?php
 
+namespace MyCloudKmsProject;
+
 use Google\ApiCore\ApiException;
 use Google\Cloud\Kms\V1\CryptoKey;
 use Google\Cloud\Kms\V1\CryptoKey\CryptoKeyPurpose;
